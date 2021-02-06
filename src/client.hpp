@@ -21,6 +21,7 @@ private:
     void drawBuffer();
     
     int bufferIndex;
+    int at;
     std::string msgBuffer;
 
     // Index at which to start reading backlog, can be controlled
