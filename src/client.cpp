@@ -8,8 +8,7 @@ Client::Client()
       bufferIndex{0},
       at{0},
       msgBuffer{},
-      readIndex{},
-      msgBacklog{}
+      log{0, 0}
 {
     // Init ncurses
     initscr();
@@ -20,8 +19,12 @@ Client::Client()
     // Enable colors
     start_color();
     init_pair(1, COLOR_WHITE, COLOR_BLUE);
+    init_pair(2, COLOR_CYAN, 0);
+    init_pair(3, COLOR_YELLOW, 0);
 
     getmaxyx(stdscr, winY, winX);
+    log.width = winX;
+    log.height = winY;
     
     drawBuffer();
     refreshScreen();
@@ -35,7 +38,6 @@ Client::~Client()
 
 void Client::handleInputs()
 {
-    
     key = getch();
     
     switch(key)
@@ -63,6 +65,9 @@ void Client::handleInputs()
         at = msgBuffer.size();
         drawBuffer();
         refreshScreen();
+        break;
+    case 10: // ENTER
+        sendMessageBuffer();
         break;
     case KEY_LEFT:
         if (static_cast<size_t>(at) != 0) at--;
@@ -95,14 +100,27 @@ void Client::drawBuffer()
     
     // Redraw buffer
     attron(COLOR_PAIR(1));
+    // clrtoeol() replacement with colors
     mvprintw(winY-1, 0, nothing.c_str());
     mvprintw(winY-1, 0, msgBuffer.c_str());
     move(winY-1, at);
     attroff(COLOR_PAIR(1));
 }
 
+void Client::sendMessageBuffer()
+{
+    log.addMessage("Test", msgBuffer);
+    msgBuffer = "";
+    at = 0;
+    log.drawBacklog();
+    drawBuffer();
+    refreshScreen();
+}
+
 void Client::refreshScreen()
 {
     getmaxyx(stdscr, winY, winX);
+    log.width = winX;
+    log.height = winY;
     refresh();
 }

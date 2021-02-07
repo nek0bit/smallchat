@@ -4,6 +4,8 @@
 #include <vector>
 #include <ncurses.h>
 
+#include "backlog.hpp"
+
 struct Client
 {
     Client();
@@ -11,6 +13,7 @@ struct Client
 
     void handleInputs();
     void refreshScreen();
+    void sendMessageBuffer();
 
     bool exit;
 private:
@@ -24,7 +27,5 @@ private:
     int at;
     std::string msgBuffer;
 
-    // Index at which to start reading backlog, can be controlled
-    int readIndex;
-    std::vector<std::string> msgBacklog;
+    Backlog log;
 };
