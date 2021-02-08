@@ -53,7 +53,7 @@ Server::~Server()
 }
 
 // THREAD FUNCTION
-int Server::connectionHandle(int fd)
+int Server::connectionHandle(int clientFd)
 {
     char namebuf[20] = "";
     char sendto[20] = "";
@@ -61,29 +61,31 @@ int Server::connectionHandle(int fd)
     std::string sendtoStr, namebufStr, msgBufferStr;
 
     // Recieve username as first request
-    if (recv(fd, namebuf, sizeof(namebuf), 0) != -1)
+    if (recv(clientFd, namebuf, sizeof(namebuf), 0) != -1)
     {
         namebufStr = namebuf;
         parseName(namebufStr);
         
-        connections.insert({namebufStr, {fd, namebufStr}});
+        connections.insert({namebufStr, {clientFd, namebufStr}});
     } else {
-        close(fd);
+        std::cerr << "[thread] Couldn't recieve" << std::endl;
+        close(clientFd);
         return -1;
     }
 
-    if (recv(fd, sendto, sizeof(sendto), 0) != -1)
+    if (recv(clientFd, sendto, sizeof(sendto), 0) != -1)
     {
         sendtoStr = sendto;
         parseName(sendtoStr);        
     } else {
-        close(fd);
+        std::cerr << "[thread] Couldn't recieve" << std::endl;
+        close(clientFd);
         return -1;
     }
 
     while (true)
     {
-        recv(fd, msgBuffer, sizeof(msgBuffer), 0);
+        recv(clientFd, msgBuffer, sizeof(msgBuffer), 0);
         msgBufferStr = msgBuffer;
 
         if (msgBufferStr[0] == 'q' && msgBufferStr[1] == ';')
@@ -93,7 +95,7 @@ int Server::connectionHandle(int fd)
         sendMsgTo(sendtoStr, msgBufferStr);
     }
     
-    close(fd);
+    close(clientFd);
     return 0;
 }
 
