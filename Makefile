@@ -4,7 +4,7 @@ LDFLAGS=-pthread -lncurses
 SRC_DIR=src
 OBJ_DIR=obj
 TARGET=smallchat
-SRC=main.cpp client.cpp backlog.cpp
+SRC=main.cpp client.cpp backlog.cpp listener.cpp
 OBJ=$(SRC:%.cpp=$(OBJ_DIR)/%.o)
 
 SERVER_SRC_DIR=server
