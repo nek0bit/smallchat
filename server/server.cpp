@@ -55,38 +55,42 @@ Server::~Server()
 // THREAD FUNCTION
 int Server::connectionHandle(int clientFd)
 {
-    char namebuf[20] = "";
-    char sendto[20] = "";
-    char msgBuffer[2048] = "";
-    std::string sendtoStr, namebufStr, msgBufferStr;
+    char fullbuf[40];
+    std::string fullbufStr, sendtoStr, namebufStr;
+
+    int err;
 
     // Recieve username as first request
-    if (recv(clientFd, namebuf, sizeof(namebuf), 0) != -1)
+    try
     {
-        namebufStr = namebuf;
-        parseName(namebufStr);
+        if ((err = recv(clientFd, fullbuf, 20, 0)) != -1)
+        {
+            fullbufStr = fullbuf;
+            size_t find = fullbufStr.find(";");
+            namebufStr = fullbufStr.substr(0, find);
+            sendtoStr = fullbufStr.substr(find+1, fullbufStr.size());
         
-        connections.insert({namebufStr, {clientFd, namebufStr}});
-    } else {
-        std::cerr << "[thread] Couldn't recieve" << std::endl;
-        close(clientFd);
-        return -1;
+            parseName(namebufStr);
+            parseName(sendtoStr);
+        
+            connections.insert({namebufStr, {clientFd, namebufStr}});
+        }
+        else
+        {
+            close(fd);
+            return -1;
+        }
     }
-
-    if (recv(clientFd, sendto, sizeof(sendto), 0) != -1)
-    {
-        sendtoStr = sendto;
-        parseName(sendtoStr);        
-    } else {
-        std::cerr << "[thread] Couldn't recieve" << std::endl;
-        close(clientFd);
-        return -1;
-    }
+    catch(const std::out_of_range& err) {}
 
     while (true)
     {
-        recv(clientFd, msgBuffer, sizeof(msgBuffer), 0);
-        msgBufferStr = msgBuffer;
+        char msgBuffer[1024];
+        int bs;
+        bs = recv(clientFd, msgBuffer, 1023, 0);
+        msgBuffer[bs] = '\0';
+        
+        std::string msgBufferStr = msgBuffer;
 
         if (msgBufferStr[0] == 'q' && msgBufferStr[1] == ';')
             break;
@@ -127,7 +131,7 @@ void Server::sendMsgTo(std::string to, std::string msg)
     {
         auto found = connections.at(to);
         msg = "m;" + msg;
-        send(found.id, msg.c_str(), sizeof(msg.c_str()), 0);
+        send(found.id, msg.c_str(), strlen(msg.c_str()), 0);
     }
     catch(const std::out_of_range& err) {}
 }

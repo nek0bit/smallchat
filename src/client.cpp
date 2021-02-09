@@ -1,6 +1,6 @@
 #include "client.hpp"
 
-Client::Client()
+Client::Client(std::string you, std::string them)
     : exit{false},
       winX{0},
       winY{0},
@@ -8,7 +8,9 @@ Client::Client()
       bufferIndex{0},
       at{0},
       msgBuffer{},
-      log{0, 0}
+      log{0, 0},
+      you{you},
+      them{them}
 {
     // Init ncurses
     initscr();
@@ -109,7 +111,12 @@ void Client::drawBuffer()
 
 void Client::sendMessageBuffer()
 {
-    log.addMessage("Test", msgBuffer);
+    log.addMessage(you, msgBuffer);
+    // Send the message
+
+    send(fd, msgBuffer.c_str(), strlen(msgBuffer.c_str()), 0);
+    
+    // Clean up inputs
     msgBuffer = "";
     at = 0;
     log.drawBacklog();

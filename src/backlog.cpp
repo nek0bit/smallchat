@@ -13,11 +13,21 @@ void Backlog::addMessage(std::string msg)
 
 void Backlog::addMessage(std::string name, std::string msg, uint8_t nameColor)
 {
-    log.push_back(Message{{name, nameColor, name == "" ? false : true}, msg});
+    updateLock.lock();
+    try
+    {
+        log.push_back(Message{{name, nameColor, name == "" ? false : true}, msg});
+    }
+    catch(const std::exception& err)
+    {
+        updateLock.unlock();
+    }
+    updateLock.unlock();
 }
 
 void Backlog::drawBacklog()
 {
+    drawLock.lock();
     // Clear backlog
     for (uint16_t i = 0; i < height; ++i)
     {
@@ -34,10 +44,11 @@ void Backlog::drawBacklog()
         move(i, 0);
         if (log[i+offset].username.enabled)
         {
-            attron(COLOR_PAIR(2));
+            attron(COLOR_PAIR(log[i+offset].username.color));
             printw("<%s> ", log[i+offset].username.name.c_str());
-            attroff(COLOR_PAIR(2));
+            attroff(COLOR_PAIR(log[i+offset].username.color));
         }
         printw(log[i+offset].msg.c_str());
     }
+    drawLock.unlock();
 }

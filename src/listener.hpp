@@ -19,8 +19,8 @@ struct Listener
     ~Listener();
 
     void startThread();
-private:
     int fd;
+private:
     Client& client;
     void threadMethod();
     std::thread thr;

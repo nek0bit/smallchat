@@ -5,8 +5,10 @@
 
 int main(int argc, char* argv[])
 {
-    Client client{};
-    Listener server{"localhost", 1028, client};
+    Client client{argv[2], argv[3]};
+    Listener server{argv[1], 1028, client};
+
+    client.fd = server.fd;
 
     server.startThread();
     

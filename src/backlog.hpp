@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <mutex>
 #include <memory>
 #include <ncurses.h>
 
@@ -32,6 +33,9 @@ struct Backlog
     int height;
 
     int scrollBack;
+    
 private:
+    std::mutex updateLock;
+    std::mutex drawLock;
     std::vector<Message> log;
 };

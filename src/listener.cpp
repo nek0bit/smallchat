@@ -29,9 +29,10 @@ Listener::Listener(std::string host, int port, Client& client)
         if (connect(fd, res->ai_addr, res->ai_addrlen) == -1)
         {
             close(fd);
-        } else {
-            break;
+            continue;
         }
+
+        break;
     }
 
     if (res == NULL)
@@ -40,6 +41,10 @@ Listener::Listener(std::string host, int port, Client& client)
     }
 
     freeaddrinfo(serverinfo);
+
+    // Send client info
+    std::string split = client.you + ";" + client.them;
+    send(fd, split.c_str(), strlen(split.c_str()), 0);
 }
 
 Listener::~Listener()
@@ -50,10 +55,24 @@ Listener::~Listener()
 
 void Listener::startThread()
 {
+    if (thr.joinable()) thr.join();
     thr = std::thread{&Listener::threadMethod, this};
 }
 
 void Listener::threadMethod()
 {
-    // TODO work on recv calls and listening for this listener closing with mutex
+    while (1)
+    {
+        int bs;
+        char msg[1024];
+        
+        bs = recv(fd, msg, 1023, 0);
+        
+        msg[bs] = '\0';
+        
+        client.log.addMessage(client.them, &msg[2], 3);
+        client.log.drawBacklog();
+        client.drawBuffer();
+        client.refreshScreen();
+    }
 }
